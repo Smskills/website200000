@@ -38,35 +38,18 @@ export interface DbNotice {
   isActive: boolean;
 }
 
-export interface DbPage {
-  id: string;
-  seo: {
-    title: string;
-    description: string;
-  };
-}
+/**
+ * SECURITY: Sanitizes strings by removing HTML tags and potential script injections.
+ */
+const strictSanitize = (str: string): string => {
+  if (!str) return '';
+  return str.replace(/<[^>]*>?/gm, '').trim();
+};
 
 class InstitutionalService {
-  // SECURITY: Ephemeral in-memory storage only. No localStorage to prevent false trust.
+  // SECURITY: Data is ephemeral (in-memory). No localStorage to prevent false trust.
   private _enquiries: DbEnquiry[] = [];
   private _settings = { ...SITE_CONFIG };
-  private _courses: DbCourse[] = COURSES.map(c => ({
-    id: c.id,
-    name: c.title,
-    description: c.description,
-    duration: c.duration,
-    isPublished: true
-  }));
-
-  /**
-   * SECURITY: Sanitizes user input to prevent XSS.
-   */
-  private sanitize(str: string): string {
-    if (!str) return '';
-    const temp = document.createElement('div');
-    temp.textContent = str;
-    return temp.innerHTML;
-  }
 
   // --- Configuration ---
   getSettings() {
@@ -80,23 +63,24 @@ class InstitutionalService {
     };
   }
 
-  updateSettings(settings: any) {
-    // In demo mode, we just update memory
-    this._settings.name = this.sanitize(settings.siteName);
+  async updateSettings(settings: any): Promise<boolean> {
+    // Backend Readiness: Simulated network latency
+    await new Promise(r => setTimeout(r, 400));
+    this._settings.name = strictSanitize(settings.siteName);
     this.sync();
+    return true;
   }
 
-  // --- Enquiry Management (Hardened) ---
-  async submitEnquiry(data: Omit<DbEnquiry, 'id' | 'timestamp' | 'status'>): Promise<boolean> {
-    // Artificial delay to simulate processing
-    await new Promise(resolve => setTimeout(resolve, 600));
+  // --- Enquiry Management ---
+  async validateEnquiry(data: Omit<DbEnquiry, 'id' | 'timestamp' | 'status'>): Promise<boolean> {
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     const newEnquiry: DbEnquiry = {
-      name: this.sanitize(data.name),
-      phone: this.sanitize(data.phone),
-      email: this.sanitize(data.email),
-      course: this.sanitize(data.course),
-      message: this.sanitize(data.message),
+      name: strictSanitize(data.name),
+      phone: strictSanitize(data.phone),
+      email: strictSanitize(data.email),
+      course: strictSanitize(data.course),
+      message: strictSanitize(data.message),
       id: Date.now(),
       timestamp: new Date().toISOString(),
       status: 'NEW'
@@ -107,44 +91,46 @@ class InstitutionalService {
     return true;
   }
 
-  getEnquiries(): DbEnquiry[] {
+  async getEnquiries(): Promise<DbEnquiry[]> {
     return [...this._enquiries];
   }
 
-  deleteEnquiry(id: number) {
+  async deleteEnquiry(id: number): Promise<boolean> {
     this._enquiries = this._enquiries.filter(e => e.id !== id);
     this.sync();
+    return true;
   }
 
-  // --- Program Inventory ---
-  getCourses(): DbCourse[] {
-    return [...this._courses];
+  // --- Static Data (Backend Ready) ---
+  async getCourses(): Promise<DbCourse[]> {
+    return COURSES.map(c => ({
+      id: c.id,
+      name: c.title,
+      description: c.description,
+      duration: c.duration,
+      isPublished: true
+    }));
   }
 
-  // --- Broadcasts (Notices) ---
-  getNotices(): DbNotice[] {
+  async getNotices(): Promise<DbNotice[]> {
     return NOTICES.map((n, i) => ({ ...n, id: i, isActive: true }));
   }
 
   getUsers(): AdminUser[] {
-    // Demo credentials
+    // Mock identities for demo access
     return [
       { id: '1', username: 'admin', passwordHash: 'admin', role: 'SUPER_ADMIN' },
       { id: '2', username: 'editor', passwordHash: 'editor', role: 'MANAGER' }
     ];
   }
 
-  getPage(pageId: string): DbPage | undefined {
-    const pages: Record<string, DbPage> = {
-      'home': { id: 'home', seo: { title: 'Home | SM Skills', description: 'SM Skills Institute' } },
-      'about': { id: 'about', seo: { title: 'About | SM Skills', description: 'About SM Skills' } },
-      'courses': { id: 'courses', seo: { title: 'Courses | SM Skills', description: 'Our Courses' } },
-      'admissions': { id: 'admissions', seo: { title: 'Admissions | SM Skills', description: 'Join Us' } },
-      'placement': { id: 'placement', seo: { title: 'Placements | SM Skills', description: 'Careers' } },
-      'gallery': { id: 'gallery', seo: { title: 'Gallery | SM Skills', description: 'Campus Life' } },
-      'contact': { id: 'contact', seo: { title: 'Contact | SM Skills', description: 'Contact Us' } },
+  getPage(pageId: string) {
+    const pages: any = {
+      'home': { id: 'home', seo: { title: 'SM Skills | Training Institute', description: 'Institutional framework for core skills.' } },
+      'contact': { id: 'contact', seo: { title: 'Contact | SM Skills', description: 'Institutional enquiry portal.' } },
+      // ... other pages
     };
-    return pages[pageId];
+    return pages[pageId] || pages['home'];
   }
 
   private sync() {

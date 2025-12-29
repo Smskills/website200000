@@ -2,17 +2,23 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Briefcase, Bell, ArrowRight } from 'lucide-react';
-import { db } from '../lib/db.ts';
+import { db, DbNotice } from '../lib/db.ts';
 import SEO from '../components/SEO.tsx';
 
 const Home: React.FC = () => {
-  const [notices, setNotices] = useState(db.getNotices());
+  // Fix: Initialize as an empty array and handle async fetch to prevent treating Promise as an array
+  const [notices, setNotices] = useState<DbNotice[]>([]);
   const settings = db.getSettings();
 
   useEffect(() => {
-    const refresh = () => {
-      setNotices(db.getNotices());
+    // Fix: Define an async refresh function to await the promise from db.getNotices()
+    const refresh = async () => {
+      const data = await db.getNotices();
+      setNotices(data);
     };
+    // Trigger initial fetch
+    refresh();
+    
     window.addEventListener('db-update', refresh);
     return () => window.removeEventListener('db-update', refresh);
   }, []);

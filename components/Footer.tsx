@@ -74,11 +74,11 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/5 mt-32 pt-16 flex flex-col md:row justify-between items-center text-[10px] font-black uppercase tracking-[0.4em] text-slate-700">
-          <p>&copy; 2024 INSTITUTIONAL RECORD. ALL RIGHTS RESERVED.</p>
+        <div className="border-t border-white/5 mt-32 pt-16 flex flex-col md:flex-row justify-between items-center text-sm font-medium text-slate-500">
+          <p>&copy; 2024 Institutional Record. All rights reserved.</p>
           <div className="flex space-x-10 mt-6 md:mt-0">
-             <a href="#" className="hover:text-slate-400">Privacy Protocol</a>
-             <a href="#" className="hover:text-slate-400">Terms of Access</a>
+             <a href="#" className="hover:text-white transition-colors">Privacy Protocol</a>
+             <a href="#" className="hover:text-white transition-colors">Terms of Access</a>
           </div>
         </div>
       </div>

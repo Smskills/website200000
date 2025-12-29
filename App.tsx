@@ -1,6 +1,5 @@
 
 import React from 'react';
-/* Use named imports instead of wildcard to fix type errors */
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 
 import Navbar from './components/Navbar.tsx';
@@ -14,6 +13,9 @@ import Gallery from './pages/Gallery.tsx';
 import Contact from './pages/Contact.tsx';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
+import AdminCourses from './pages/AdminCourses.tsx'; // NEW
+import AdminNotices from './pages/AdminNotices.tsx'; // NEW
+import AdminEnquiries from './pages/AdminEnquiries.tsx'; // NEW
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import { SITE_CONFIG } from './data/siteData.ts';
 
@@ -27,7 +29,7 @@ const ScrollToTop = () => {
 
 const FloatingActions = () => {
   const location = useLocation();
-  const isDashboard = location.pathname.startsWith('/dashboard');
+  const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
   const isLogin = location.pathname === '/login';
 
   if (isDashboard || isLogin) return null;
@@ -37,7 +39,6 @@ const FloatingActions = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex flex-col space-y-2.5 items-end">
-      {/* Compact WhatsApp Action */}
       <a 
         href={`https://wa.me/${phoneNumber}?text=${whatsappMessage}`}
         target="_blank"
@@ -54,11 +55,9 @@ const FloatingActions = () => {
           <span className="text-[12px] font-bold text-slate-800 uppercase tracking-wider leading-none">WhatsApp</span>
         </div>
       </a>
-
-      {/* Compact Call Action */}
       <a 
         href={`tel:${phoneNumber}`}
-        className="flex items-center bg-white border border-slate-100 pl-1 pr-4 py-1 rounded-xl shadow-[0_8px_20px_-8px_rgba(0,0,0,0.15)] transition-all hover:scale-105 active:scale-95 group animate-in slide-in-from-right duration-700"
+        className="flex items-center bg-white border border-slate-100 pl-1 pr-4 py-1 rounded-xl shadow-[0_8px_20px_-8px_rgba(0,0,0,0.15)] transition-all hover:scale-105 active:scale-95 group animate-in slide-in-from-right duration-500"
       >
         <div className="w-9 h-9 bg-gradient-to-br from-[#5FFB62] to-[#25D366] rounded-lg flex items-center justify-center shadow-sm mr-2.5 flex-shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white">
@@ -75,7 +74,7 @@ const FloatingActions = () => {
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const isMinimalPage = location.pathname === '/login' || location.pathname.startsWith('/dashboard');
+  const isMinimalPage = location.pathname === '/login' || location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -103,11 +102,36 @@ const App: React.FC = () => {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          
           <Route 
             path="/dashboard" 
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/courses" 
+            element={
+              <ProtectedRoute>
+                <AdminCourses />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/notices" 
+            element={
+              <ProtectedRoute>
+                <AdminNotices />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/enquiries" 
+            element={
+              <ProtectedRoute>
+                <AdminEnquiries />
               </ProtectedRoute>
             } 
           />

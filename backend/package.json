@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "backend",
   "version": "1.0.0",
@@ -15,5 +16,27 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "mysql2": "^3.16.0"
+=======
+
+{
+  "name": "sm-skills-backend",
+  "version": "1.0.0",
+  "description": "Secure backend foundation for SM Skills Institute",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "helmet": "^7.1.0",
+    "mysql2": "^3.11.0",
+    "express-rate-limit": "^7.2.0",
+    "validator": "^13.11.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+>>>>>>> 96d0b75bfd2d9e6c79feae7589d7f70b5ef7ea3e
   }
 }

@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 
 const healthRoute = require('./routes/health');
+const enquiryRoute = require('./routes/enquiry');
 
 const app = express();
 
@@ -10,6 +11,8 @@ app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/health', healthRoute);
+app.use('/api/enquiry', enquiryRoute);
+
 
 // Global error handler
 app.use((err, req, res, next) => {

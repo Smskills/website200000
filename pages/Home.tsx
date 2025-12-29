@@ -2,23 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Briefcase, Bell, ArrowRight } from 'lucide-react';
-import { db } from '../lib/db';
-import SEO from '../components/SEO';
+import { db } from '../lib/db.ts';
+import SEO from '../components/SEO.tsx';
 
 const Home: React.FC = () => {
-  const [content, setContent] = useState(db.getPage('home'));
-  const [notices, setNotices] = useState(db.getNotices().filter(n => n.isActive));
+  const [notices, setNotices] = useState(db.getNotices());
+  const settings = db.getSettings();
 
   useEffect(() => {
     const refresh = () => {
-      setContent(db.getPage('home'));
-      setNotices(db.getNotices().filter(n => n.isActive));
+      setNotices(db.getNotices());
     };
     window.addEventListener('db-update', refresh);
     return () => window.removeEventListener('db-update', refresh);
   }, []);
-
-  if (!content) return null;
 
   return (
     <div className="bg-white">
@@ -38,18 +35,18 @@ const Home: React.FC = () => {
         <div className="container mx-auto px-6 lg:px-12 h-full relative flex items-center">
           <div className="max-w-2xl">
             <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 tracking-tight uppercase">
-              {content.title} <br />
-              <span className="text-green-500">{content.subtitle}</span>
+              {settings.siteName} <br />
+              <span className="text-green-500">Education Redefined.</span>
             </h1>
             <p className="text-lg lg:text-xl text-slate-300 mb-8 leading-relaxed font-normal">
-              {content.sections.heroDesc}
+              Empowering the next generation of professionals through cutting-edge skills training and industry-aligned academic frameworks.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link to="/courses" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-bold uppercase tracking-wider text-sm transition-all shadow-lg active:scale-95">
                 Explore Programs
               </Link>
-              <Link to="/admissions" className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-4 rounded-lg font-bold uppercase tracking-wider text-sm transition-all shadow-lg">
-                Apply Today
+              <Link to="/contact" className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-4 rounded-lg font-bold uppercase tracking-wider text-sm transition-all shadow-lg">
+                Enquire Today
               </Link>
             </div>
           </div>
@@ -62,17 +59,17 @@ const Home: React.FC = () => {
           <InfoBox 
             icon={<BookOpen size={24}/>} 
             title="Modern Curriculum" 
-            desc="Academic rigor met with industry standards to ensure global competitiveness." 
+            desc="Academic rigor met with industry standards to ensure global competitiveness and job readiness." 
             color="bg-green-600" 
           />
           <InfoBox 
             icon={<Briefcase size={24}/>} 
             title="Strategic Placement" 
-            desc="Our global network of corporate partners provides unparalleled career opportunities." 
+            desc="Our global network of corporate partners provides unparalleled career opportunities for every graduate." 
             color="bg-blue-600" 
           />
 
-          {/* Traditional Notice Terminal */}
+          {/* Scrolling Notice Terminal - Restored */}
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 flex flex-col h-[400px] overflow-hidden">
             <div className="bg-slate-800 p-5 flex items-center justify-between">
               <div className="flex items-center space-x-3 text-white">
@@ -88,8 +85,8 @@ const Home: React.FC = () => {
             <div className="flex-grow overflow-hidden relative p-2 bg-slate-50">
               <div className="animate-scroll-up h-full">
                 <div className="space-y-3">
-                  {notices.map((notice) => (
-                    <div key={notice.id} className="p-5 bg-white border border-slate-100 rounded-lg hover:border-green-200 transition-all group shadow-sm">
+                  {notices.map((notice, idx) => (
+                    <div key={`${notice.id}-${idx}`} className="p-5 bg-white border border-slate-100 rounded-lg hover:border-green-200 transition-all group shadow-sm">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-[10px] text-slate-400 font-bold uppercase">{notice.date}</span>
                         {notice.tag && <span className="text-[9px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold uppercase tracking-tighter border border-red-200">{notice.tag}</span>}
@@ -98,9 +95,9 @@ const Home: React.FC = () => {
                       <p className="text-xs text-slate-500 leading-normal line-clamp-2">{notice.desc}</p>
                     </div>
                   ))}
-                  {/* Buffer for loop */}
-                  {notices.length < 5 && notices.map((notice) => (
-                    <div key={`${notice.id}-dup`} className="p-5 bg-white border border-slate-100 rounded-lg">
+                  {/* Duplicate for infinite effect */}
+                  {notices.map((notice, idx) => (
+                    <div key={`${notice.id}-dup-${idx}`} className="p-5 bg-white border border-slate-100 rounded-lg">
                        <h4 className="font-bold text-slate-900 text-sm">{notice.title}</h4>
                     </div>
                   ))}
@@ -117,15 +114,15 @@ const Home: React.FC = () => {
           <div>
             <span className="text-green-600 font-bold text-xs uppercase tracking-[0.3em] mb-4 block">Institutional Framework</span>
             <h2 className="text-4xl font-bold text-slate-900 mb-8 tracking-tight uppercase leading-tight">
-              {content.sections.welcomeTitle}
+              A Legacy of Excellence in Professional Training
             </h2>
             <div className="w-16 h-1.5 bg-green-600 mb-10"></div>
             <div className="space-y-6">
               <p className="text-slate-600 text-lg leading-relaxed font-normal">
-                {content.sections.welcomeDesc1}
+                Established as a beacon of modern learning, {settings.siteName} has been committed to providing a learning environment that encourages curiosity and professional excellence.
               </p>
               <p className="text-slate-500 text-base leading-relaxed">
-                {content.sections.welcomeDesc2}
+                Our campus serves as a hub for innovation where students bridge the gap between theory and practice through state-of-the-art labs and industry mentorship.
               </p>
             </div>
             <Link to="/about" className="mt-10 inline-flex items-center space-x-2 bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-lg font-bold uppercase text-xs tracking-widest transition-all">

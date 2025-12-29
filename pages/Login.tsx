@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, Lock, User, AlertCircle, ShieldCheck } from 'lucide-react';
-import { db } from '../lib/db';
+import { ArrowLeft, Lock, User, AlertCircle, ShieldCheck, ChevronRight } from 'lucide-react';
+import { db } from '../lib/db.ts';
 
 const Login: React.FC = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -11,6 +11,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const settings = db.getSettings();
   const from = (location.state as any)?.from?.pathname || "/dashboard";
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const Login: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    // Simulate Server Request
+    // Simulate Server Request with institutional latency
     setTimeout(() => {
       const user = db.getUsers().find(u => 
         u.username === credentials.username && 
@@ -36,98 +37,107 @@ const Login: React.FC = () => {
         sessionStorage.setItem('sm_skills_session_start', new Date().toISOString());
         navigate(from, { replace: true });
       } else {
-        setError('Authentication Failed: Protocol Rejected');
+        setError('Invalid credentials. Access denied by institutional security.');
         setIsLoading(false);
       }
-    }, 1200);
+    }, 800);
   };
 
   return (
-    <div className="bg-[#0f172a] min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Dynamic Background */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-green-500 blur-[150px] rounded-full"></div>
-        <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-blue-600 blur-[150px] rounded-full"></div>
+    <div className="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-6">
+      {/* Header Navigation */}
+      <div className="absolute top-10 left-10 hidden lg:block text-slate-500 hover:text-slate-900">
+        <Link to="/" className="flex items-center transition-colors font-semibold text-sm group">
+          <ArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" /> 
+          Back to Website
+        </Link>
       </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="mb-8">
-          <Link to="/" className="inline-flex items-center text-slate-500 hover:text-white transition-colors group">
-            <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" /> 
-            <span className="font-bold uppercase text-[10px] tracking-[0.3em]">Exit to Portal</span>
-          </Link>
+      <div className="w-full max-w-[440px]">
+        {/* Institutional Branding */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-600 rounded-2xl mb-6 shadow-lg shadow-green-600/20">
+            <ShieldCheck className="text-white" size={40} />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2 uppercase tracking-tight">{settings.siteName}</h1>
+          <p className="text-slate-500 font-medium text-sm">Administrative Governance Portal</p>
         </div>
         
-        <div className="bg-[#1e293b] rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] p-12 border border-slate-800 backdrop-blur-xl">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-[#0f172a] rounded-[2.5rem] mb-6 shadow-2xl border border-slate-800 ring-8 ring-[#1e293b]">
-              <ShieldCheck className="text-green-500" size={48} />
-            </div>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight leading-none mb-3">ADMIN CORE</h2>
-            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.4em]">Secure Terminal Entry</p>
+        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+          <div className="p-10">
+            <h2 className="text-xl font-bold text-slate-800 mb-8">Sign In</h2>
+
+            {error && (
+              <div className="mb-8 p-4 bg-red-50 border border-red-100 flex items-center text-red-700 text-xs font-bold rounded-lg animate-in fade-in slide-in-from-top-2">
+                <AlertCircle size={16} className="mr-3 flex-shrink-0" />
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Username</label>
+                <div className="relative">
+                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text"
+                    required
+                    autoFocus
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-green-600 focus:bg-white transition-all font-medium text-slate-900 placeholder:text-slate-400"
+                    placeholder="Enter your username"
+                    value={credentials.username}
+                    onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between items-center mb-2.5 ml-1">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest">Password</label>
+                  <a href="#" className="text-[10px] font-bold text-green-600 hover:text-green-700 uppercase tracking-wider">Forgot Password?</a>
+                </div>
+                <div className="relative">
+                  <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="password"
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 py-4 focus:outline-none focus:border-green-600 focus:bg-white transition-all font-medium text-slate-900 placeholder:text-slate-400"
+                    placeholder="••••••••"
+                    value={credentials.password}
+                    onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-widest py-4.5 rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-slate-900/10 active:scale-[0.98]"
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <span>Authorize Access</span>
+                    <ChevronRight size={18} />
+                  </>
+                )}
+              </button>
+            </form>
           </div>
 
-          {error && (
-            <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 flex items-center text-red-400 text-[10px] font-bold uppercase tracking-widest rounded-2xl animate-in shake-in">
-              <AlertCircle size={18} className="mr-3 flex-shrink-0" />
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-8">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">Terminal ID</label>
-              <div className="relative">
-                <User size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600" />
-                <input 
-                  type="text"
-                  required
-                  className="w-full bg-[#0f172a] border border-slate-800 rounded-2xl pl-14 pr-6 py-4.5 focus:outline-none focus:border-green-600 transition-all font-bold text-white placeholder:text-slate-800"
-                  placeholder="USERNAME"
-                  value={credentials.username}
-                  onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">Access Key</label>
-              <div className="relative">
-                <Lock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600" />
-                <input 
-                  type="password"
-                  required
-                  className="w-full bg-[#0f172a] border border-slate-800 rounded-2xl pl-14 pr-6 py-4.5 focus:outline-none focus:border-green-600 transition-all font-bold text-white placeholder:text-slate-800"
-                  placeholder="••••••••"
-                  value={credentials.password}
-                  onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              className="w-full bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-[0.3em] py-5 rounded-2xl transition-all transform active:scale-95 shadow-2xl flex items-center justify-center space-x-3 group"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <span>Verify Identity</span>
-                  <ShieldCheck size={18} className="group-hover:rotate-12 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-10 pt-8 border-t border-slate-800 text-center">
-             <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest leading-relaxed">
-               Seed Credentials:<br/>
-               Super Admin: admin / admin<br/>
-               Manager: editor / editor
+          <div className="px-10 py-6 bg-slate-50 border-t border-slate-100 text-center">
+             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+               Seed Access:<br/>
+               <span className="text-slate-600">Admin: admin/admin</span> • <span className="text-slate-600">Editor: editor/editor</span>
              </p>
           </div>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
+            Institutional Record System &copy; 2024
+          </p>
         </div>
       </div>
     </div>

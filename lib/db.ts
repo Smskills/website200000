@@ -1,16 +1,8 @@
 
 import { SITE_CONFIG, NOTICES, COURSES, GALLERY_IMAGES } from '../data/siteData.ts';
 
-/**
- * ARCHITECTURAL NOTE:
- * In a production environment, these methods should be replaced with 
- * native fetch() calls to a Node.js/Python/PHP backend.
- */
-
-// Added missing UserRole type for permissions
 export type UserRole = 'SUPER_ADMIN' | 'MANAGER';
 
-// Added missing AdminUser interface for authentication
 export interface AdminUser {
   id: string;
   username: string;
@@ -29,7 +21,6 @@ export interface DbEnquiry {
   status: 'NEW' | 'CONTACTED' | 'CLOSED';
 }
 
-// Added missing DbCourse interface for inventory management
 export interface DbCourse {
   id: number;
   name: string;
@@ -38,7 +29,6 @@ export interface DbCourse {
   isPublished: boolean;
 }
 
-// Added missing DbNotice interface for announcement management
 export interface DbNotice {
   id: number;
   date: string;
@@ -48,7 +38,6 @@ export interface DbNotice {
   isActive: boolean;
 }
 
-// Added missing DbPage interface for SEO management
 export interface DbPage {
   id: string;
   seo: {
@@ -58,13 +47,29 @@ export interface DbPage {
 }
 
 class InstitutionalService {
-  private isDevelopment = true;
+  /**
+   * SECURITY: Sanitizes user input to prevent XSS.
+   * In a real app, this would be handled by a backend library like DOMPurify.
+   */
+  private sanitize(str: string): string {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m] || m));
+  }
 
   // --- Configuration ---
   getSettings() {
-    // Priority: Saved Settings > Static Config
-    const saved = localStorage.getItem('inst_settings');
-    if (saved) return JSON.parse(saved);
+    try {
+      const saved = localStorage.getItem('inst_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn("Storage access restricted.");
+    }
     return {
       siteName: SITE_CONFIG.name,
       tagline: SITE_CONFIG.tagline,
@@ -76,21 +81,27 @@ class InstitutionalService {
   }
 
   updateSettings(settings: any) {
-    localStorage.setItem('inst_settings', JSON.stringify(settings));
-    this.sync();
+    try {
+      localStorage.setItem('inst_settings', JSON.stringify(settings));
+      this.sync();
+    } catch (e) {
+      console.error("Failed to update settings locally.");
+    }
   }
 
-  // --- Enquiry Management (Critical Path) ---
+  // --- Enquiry Management (Hardened) ---
   async submitEnquiry(data: Omit<DbEnquiry, 'id' | 'timestamp' | 'status'>): Promise<boolean> {
-    console.info("TRANSITION: Transmitting enquiry to institutional cluster...");
-    
-    // Simulate API Latency
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate network delay for honesty
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     try {
       const enquiries = this.getEnquiries();
       const newEnquiry: DbEnquiry = {
-        ...data,
+        name: this.sanitize(data.name),
+        phone: this.sanitize(data.phone),
+        email: this.sanitize(data.email),
+        course: this.sanitize(data.course),
+        message: this.sanitize(data.message),
         id: Date.now(),
         timestamp: new Date().toISOString(),
         status: 'NEW'
@@ -98,22 +109,22 @@ class InstitutionalService {
       
       enquiries.unshift(newEnquiry);
       localStorage.setItem('inst_enquiries', JSON.stringify(enquiries));
-      
-      console.log("SUCCESS: Lead committed to database.");
       this.sync();
       return true;
     } catch (e) {
-      console.error("CRITICAL: Database write failure.", e);
       return false;
     }
   }
 
   getEnquiries(): DbEnquiry[] {
-    const data = localStorage.getItem('inst_enquiries');
-    return data ? JSON.parse(data) : [];
+    try {
+      const data = localStorage.getItem('inst_enquiries');
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
   }
 
-  // Added missing updateEnquiryStatus method
   updateEnquiryStatus(id: number, status: 'NEW' | 'CONTACTED' | 'CLOSED') {
     const enquiries = this.getEnquiries();
     const index = enquiries.findIndex(e => e.id === id);
@@ -124,7 +135,6 @@ class InstitutionalService {
     }
   }
 
-  // Added missing deleteEnquiry method
   deleteEnquiry(id: number) {
     const enquiries = this.getEnquiries();
     const filtered = enquiries.filter(e => e.id !== id);
@@ -134,24 +144,30 @@ class InstitutionalService {
 
   // --- Program Inventory ---
   getCourses(): DbCourse[] {
-    const data = localStorage.getItem('inst_courses');
-    return data ? JSON.parse(data) : COURSES.map(c => ({
-      id: c.id,
-      name: c.title,
-      description: c.description,
-      duration: c.duration,
-      isPublished: true
-    }));
+    try {
+      const data = localStorage.getItem('inst_courses');
+      return data ? JSON.parse(data) : COURSES.map(c => ({
+        id: c.id,
+        name: c.title,
+        description: c.description,
+        duration: c.duration,
+        isPublished: true
+      }));
+    } catch (e) {
+      return [];
+    }
   }
 
   // --- Broadcasts (Notices) ---
   getNotices(): DbNotice[] {
-    const data = localStorage.getItem('inst_notices');
-    return data ? JSON.parse(data) : NOTICES.map((n, i) => ({ ...n, id: i, isActive: true }));
+    try {
+      const data = localStorage.getItem('inst_notices');
+      return data ? JSON.parse(data) : NOTICES.map((n, i) => ({ ...n, id: i, isActive: true }));
+    } catch (e) {
+      return [];
+    }
   }
 
-  // --- Auth Simulation ---
-  // Added missing getUsers method to provide hardcoded credentials
   getUsers(): AdminUser[] {
     return [
       { id: '1', username: 'admin', passwordHash: 'admin', role: 'SUPER_ADMIN' },
@@ -160,12 +176,10 @@ class InstitutionalService {
   }
 
   async authenticate(username: string, pass: string): Promise<boolean> {
-    // Hardcoded for prototype; replace with secure Argon2/Bcrypt verification on backend
     const users = this.getUsers();
     return users.some(u => u.username === username && u.passwordHash === pass);
   }
 
-  // Added missing getPage method for SEO metadata retrieval
   getPage(pageId: string): DbPage | undefined {
     const pages: Record<string, DbPage> = {
       'home': { id: 'home', seo: { title: 'Home | SM Skills', description: 'Welcome to SM Skills Institute' } },

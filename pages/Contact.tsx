@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import PageHeader from '../components/PageHeader.tsx';
-import { MapPin, Phone, Mail, Send, Loader2, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Send, Loader2, CheckCircle, Info } from 'lucide-react';
 import { db } from '../lib/db.ts';
 
 const Contact: React.FC = () => {
@@ -37,14 +37,21 @@ const Contact: React.FC = () => {
               <ContactInfo icon={<Phone/>} label="Admissions Helpline" value={settings.phone} />
               <ContactInfo icon={<Mail/>} label="General Email" value={settings.email} />
             </div>
+
+            <div className="mt-16 p-6 bg-slate-50 border border-slate-200 rounded-xl flex items-start space-x-4">
+              <Info className="text-slate-400 mt-1 flex-shrink-0" size={20} />
+              <p className="text-xs text-slate-500 leading-relaxed italic">
+                <strong>System Note:</strong> This website is currently in "Frontend Evaluation Mode". Contact forms save to your local browser storage and do not transmit to our servers.
+              </p>
+            </div>
           </div>
 
           <div className="bg-slate-50 p-10 rounded border border-slate-200">
             {status === 'success' ? (
               <div className="text-center py-12 animate-in fade-in zoom-in">
                 <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-slate-900 mb-4 uppercase">Enquiry Received</h3>
-                <p className="text-slate-600 mb-8">Our counseling team will contact you via email or phone within 24-48 business hours.</p>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4 uppercase">Saved to Local Store</h3>
+                <p className="text-slate-600 mb-8 font-medium">Your demo enquiry has been successfully committed to this browser's database. Visit the Admin Terminal to review it.</p>
                 <button 
                   onClick={() => setStatus('idle')}
                   className="text-green-600 font-bold uppercase text-xs tracking-widest border-b-2 border-green-600 pb-1"
@@ -80,6 +87,8 @@ const Contact: React.FC = () => {
                   <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Message / Query</label>
                   <textarea 
                     rows={4}
+                    required
+                    maxLength={1000}
                     className="bg-white border border-slate-300 rounded px-4 py-3 focus:border-green-500 outline-none font-medium resize-none"
                     value={formData.message}
                     onChange={e => setFormData({...formData, message: e.target.value})}
@@ -94,11 +103,11 @@ const Contact: React.FC = () => {
                   {status === 'sending' ? (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
-                    <><span>Transmit Lead</span> <Send size={16} /></>
+                    <><span>Submit (Demo Mode)</span> <Send size={16} /></>
                   )}
                 </button>
                 {status === 'error' && (
-                  <p className="text-red-500 text-xs font-bold text-center uppercase tracking-tighter">Transmission failed. Please check connection.</p>
+                  <p className="text-red-500 text-xs font-bold text-center uppercase tracking-tighter">Transmission blocked by security settings.</p>
                 )}
               </form>
             )}

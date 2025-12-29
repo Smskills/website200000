@@ -7,8 +7,8 @@ import { FileText, Users, PenTool, Rocket, ShieldCheck } from 'lucide-react';
 const Admissions: React.FC = () => {
   const navigate = useNavigate();
   const steps = [
-    { icon: FileText, title: 'Enquiry', desc: 'Fill the online form for validation' },
-    { icon: Users, title: 'Counseling', desc: 'Meet our academic advisors' },
+    { icon: FileText, title: 'Enquiry', desc: 'Institutional validation process' },
+    { icon: Users, title: 'Counseling', desc: 'Academic advisor consultation' },
     { icon: FileText, title: 'Admission', desc: 'Secure document verification' },
     { icon: PenTool, title: 'Training', desc: 'Industry-aligned development' },
     { icon: Rocket, title: 'Outcome', desc: 'Professional placement' },
@@ -25,7 +25,6 @@ const Admissions: React.FC = () => {
           <div className="w-16 h-1 bg-green-600 mx-auto rounded"></div>
         </div>
 
-        {/* Steps Visualizer */}
         <div className="relative">
           <div className="hidden lg:block absolute top-10 left-0 right-0 h-0.5 bg-slate-200 -z-10"></div>
           
@@ -48,9 +47,8 @@ const Admissions: React.FC = () => {
             className="bg-slate-900 hover:bg-black text-white px-10 py-5 rounded-xl font-bold uppercase tracking-[0.2em] text-[12px] shadow-2xl transition-all transform hover:-translate-y-1 flex items-center space-x-3 mx-auto"
           >
             <ShieldCheck size={18} />
-            <span>Open Enquiry Portal</span>
+            <span>Visit Contact Portal</span>
           </button>
-          <p className="mt-6 text-slate-400 text-[10px] font-bold uppercase tracking-widest">Sandbox Mode: Admissions Helpline Active</p>
         </div>
       </div>
     </div>

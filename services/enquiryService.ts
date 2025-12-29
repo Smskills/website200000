@@ -1,25 +1,9 @@
 
-import { apiFetch } from './api';
-import { db } from '../lib/db';
-
-export interface EnquiryPayload {
-  name: string;
-  email: string;
-  phone: string;
-  message: string;
-  course: string;
-}
-
-export const submitEnquiry = async (data: EnquiryPayload): Promise<boolean> => {
-  try {
-    await apiFetch('/enquiry', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    return true;
-  } catch (err) {
-    console.warn("Transmission failed. Persisting enquiry to local vault.");
-    // Allow the user to complete the action even if the backend is down
-    return await db.validateEnquiry(data);
-  }
+/**
+ * Institutional Enquiry Service
+ * Note: Online form transmission is currently disabled for maintenance.
+ */
+export const submitEnquiry = async (data: any): Promise<boolean> => {
+  // Return false/throw to trigger the 'Coming Soon' UI in the component
+  throw new Error("Form Integration Pending");
 };

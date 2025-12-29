@@ -1,5 +1,4 @@
 
-import { apiFetch } from './api';
 import { db } from '../lib/db';
 
 export interface CourseData {
@@ -10,20 +9,18 @@ export interface CourseData {
   mode: string;
 }
 
+/**
+ * Institutional Course Registry
+ * Currently pulling from local database until backend synchronization is finalized.
+ */
 export const getPublicCourses = async (): Promise<CourseData[]> => {
-  try {
-    const response = await apiFetch('/courses');
-    return response.data;
-  } catch (err) {
-    console.warn("Institutional API unreachable. Falling back to local program registry.");
-    // Emergency Fallback to lib/db.ts
-    const localCourses = await db.getCourses();
-    return localCourses.map(c => ({
-      id: c.id,
-      title: c.name,
-      description: c.description,
-      duration: c.duration,
-      mode: 'Offline' 
-    }));
-  }
+  // Use local registry for maximum stability during the frontend-only preview phase
+  const localCourses = await db.getCourses();
+  return localCourses.map(c => ({
+    id: c.id,
+    title: c.name,
+    description: c.description,
+    duration: c.duration,
+    mode: 'Offline' 
+  }));
 };

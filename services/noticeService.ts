@@ -1,5 +1,4 @@
 
-import { apiFetch } from './api';
 import { db } from '../lib/db';
 
 export interface NoticeData {
@@ -9,19 +8,16 @@ export interface NoticeData {
   created_at: string;
 }
 
+/**
+ * Notice Board Feed
+ * Sourced from local institutional data to ensure zero-downtime during preview.
+ */
 export const getPublicNotices = async (): Promise<NoticeData[]> => {
-  try {
-    const response = await apiFetch('/notices');
-    return response.data;
-  } catch (err) {
-    console.warn("Notice Terminal sync failed. Accessing local feed.");
-    // Emergency Fallback to lib/db.ts
-    const localNotices = await db.getNotices();
-    return localNotices.map(n => ({
-      id: n.id,
-      title: n.title,
-      content: n.desc,
-      created_at: n.date
-    }));
-  }
+  const localNotices = await db.getNotices();
+  return localNotices.map(n => ({
+    id: n.id,
+    title: n.title,
+    content: n.desc,
+    created_at: n.date
+  }));
 };

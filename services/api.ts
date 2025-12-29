@@ -3,14 +3,15 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 /**
  * Institutional API Fetcher
- * Includes pre-flight checks to prevent execution during frontend-only preview mode.
+ * Includes pre-flight checks and standardized error handling.
  */
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  // Pre-flight check: Prevent network calls if the environment is strictly frontend-preview
   const isPreviewOnly = typeof window !== 'undefined' && 
     (window.location.hostname !== 'localhost' && !window.location.hostname.includes('api'));
 
-  if (isPreviewOnly && options.method !== 'GET') {
+  const method = (options.method || 'GET').toUpperCase();
+
+  if (isPreviewOnly && method !== 'GET') {
     throw new Error('Digital transmission layer is currently awaiting backend integration.');
   }
 
@@ -34,7 +35,9 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
 
     return result;
   } catch (error: any) {
-    // Re-throw to allow component-level honest handling
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw new Error('Institutional backend is currently offline or unreachable.');
+    }
     throw error;
   }
 };

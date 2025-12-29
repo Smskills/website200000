@@ -1,10 +1,24 @@
 
+import { apiFetch } from './api';
+
 /**
  * Institutional Enquiry Service
- * Note: Digital portal transmission is currently in the integration phase.
- * All public enquiries are routed through telephone and campus visits.
+ * Routes digital enquiries to the secure backend.
  */
-export const submitEnquiry = async (data: any): Promise<boolean> => {
-  // Directly throw to trigger the 'Awaiting Integration' UI state in the Contact component
-  throw new Error("Admissions portal synchronization pending.");
+export const submitEnquiry = async (data: {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+  course: string;
+}): Promise<boolean> => {
+  try {
+    await apiFetch('/enquiry', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return true;
+  } catch (error) {
+    throw error;
+  }
 };

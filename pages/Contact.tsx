@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import PageHeader from '../components/PageHeader.tsx';
-import { MapPin, Phone, Mail, Send, Loader2, CheckCircle, Info } from 'lucide-react';
+import { MapPin, Phone, Mail, Send, Loader2, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 import { db } from '../lib/db.ts';
 
 const Contact: React.FC = () => {
@@ -13,6 +13,7 @@ const Contact: React.FC = () => {
     e.preventDefault();
     setStatus('sending');
 
+    // Logic: Form validates input then calls the ephemeral service
     const result = await db.submitEnquiry(formData);
     
     if (result) {
@@ -25,7 +26,7 @@ const Contact: React.FC = () => {
 
   return (
     <div className="bg-white min-h-screen pb-24">
-      <PageHeader title="Contact Admissions" subtitle="Start your professional journey today." />
+      <PageHeader title="Contact Admissions" subtitle="Professional enquiries and support." />
 
       <div className="container mx-auto px-6 lg:px-12 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
@@ -38,10 +39,10 @@ const Contact: React.FC = () => {
               <ContactInfo icon={<Mail/>} label="General Email" value={settings.email} />
             </div>
 
-            <div className="mt-16 p-6 bg-slate-50 border border-slate-200 rounded-xl flex items-start space-x-4">
-              <Info className="text-slate-400 mt-1 flex-shrink-0" size={20} />
-              <p className="text-xs text-slate-500 leading-relaxed italic">
-                <strong>System Note:</strong> This website is currently in "Frontend Evaluation Mode". Contact forms save to your local browser storage and do not transmit to our servers.
+            <div className="mt-16 p-6 bg-amber-50 border border-amber-200 rounded-xl flex items-start space-x-4">
+              <AlertTriangle className="text-amber-600 mt-1 flex-shrink-0" size={20} />
+              <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                <strong>Honesty Disclaimer:</strong> This is a frontend-only demonstration. Submitting this form will NOT send an email or store data permanently. It is for UI evaluation only.
               </p>
             </div>
           </div>
@@ -50,13 +51,15 @@ const Contact: React.FC = () => {
             {status === 'success' ? (
               <div className="text-center py-12 animate-in fade-in zoom-in">
                 <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-slate-900 mb-4 uppercase">Saved to Local Store</h3>
-                <p className="text-slate-600 mb-8 font-medium">Your demo enquiry has been successfully committed to this browser's database. Visit the Admin Terminal to review it.</p>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4 uppercase tracking-tight">Demo Submitted</h3>
+                <p className="text-slate-600 mb-8 font-medium">
+                  Frontend validation passed. In a production environment, this data would now be transmitted to our secure servers.
+                </p>
                 <button 
                   onClick={() => setStatus('idle')}
-                  className="text-green-600 font-bold uppercase text-xs tracking-widest border-b-2 border-green-600 pb-1"
+                  className="text-slate-900 font-bold uppercase text-xs tracking-widest border-b-2 border-slate-900 pb-1"
                 >
-                  Send another message
+                  Return to form
                 </button>
               </div>
             ) : (
@@ -68,27 +71,25 @@ const Contact: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input label="Phone Number" required value={formData.phone} onChange={v => setFormData({...formData, phone: v})} />
                   <div className="flex flex-col">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Preferred Program</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Program</label>
                     <select 
                       required
                       className="bg-white border border-slate-300 rounded px-4 py-3 focus:border-green-500 outline-none font-medium"
                       value={formData.course}
                       onChange={e => setFormData({...formData, course: e.target.value})}
                     >
-                      <option value="">Select a Course</option>
+                      <option value="">Select Course</option>
                       <option value="Computer Science">Computer Science</option>
                       <option value="Business Admin">Business Admin</option>
                       <option value="Graphic Design">Graphic Design</option>
-                      <option value="Data Science">Data Science</option>
                     </select>
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Message / Query</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Message</label>
                   <textarea 
                     rows={4}
                     required
-                    maxLength={1000}
                     className="bg-white border border-slate-300 rounded px-4 py-3 focus:border-green-500 outline-none font-medium resize-none"
                     value={formData.message}
                     onChange={e => setFormData({...formData, message: e.target.value})}
@@ -103,12 +104,9 @@ const Contact: React.FC = () => {
                   {status === 'sending' ? (
                     <Loader2 size={18} className="animate-spin" />
                   ) : (
-                    <><span>Submit (Demo Mode)</span> <Send size={16} /></>
+                    <><span>Test Submission</span> <Send size={16} /></>
                   )}
                 </button>
-                {status === 'error' && (
-                  <p className="text-red-500 text-xs font-bold text-center uppercase tracking-tighter">Transmission blocked by security settings.</p>
-                )}
               </form>
             )}
           </div>

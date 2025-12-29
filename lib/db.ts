@@ -1,5 +1,5 @@
 
-import { SITE_CONFIG, NOTICES, COURSES, GALLERY_IMAGES } from '../data/siteData.ts';
+import { SITE_CONFIG, NOTICES, COURSES } from '../data/siteData.ts';
 
 export type UserRole = 'SUPER_ADMIN' | 'MANAGER';
 
@@ -47,148 +47,102 @@ export interface DbPage {
 }
 
 class InstitutionalService {
+  // SECURITY: Ephemeral in-memory storage only. No localStorage to prevent false trust.
+  private _enquiries: DbEnquiry[] = [];
+  private _settings = { ...SITE_CONFIG };
+  private _courses: DbCourse[] = COURSES.map(c => ({
+    id: c.id,
+    name: c.title,
+    description: c.description,
+    duration: c.duration,
+    isPublished: true
+  }));
+
   /**
    * SECURITY: Sanitizes user input to prevent XSS.
-   * In a real app, this would be handled by a backend library like DOMPurify.
    */
   private sanitize(str: string): string {
     if (!str) return '';
-    return str.replace(/[&<>"']/g, (m) => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[m] || m));
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
   }
 
   // --- Configuration ---
   getSettings() {
-    try {
-      const saved = localStorage.getItem('inst_settings');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn("Storage access restricted.");
-    }
     return {
-      siteName: SITE_CONFIG.name,
-      tagline: SITE_CONFIG.tagline,
-      phone: SITE_CONFIG.contact.phone,
-      email: SITE_CONFIG.contact.email,
-      address: SITE_CONFIG.contact.address,
-      socials: SITE_CONFIG.contact.socials
+      siteName: this._settings.name,
+      tagline: this._settings.tagline,
+      phone: this._settings.contact.phone,
+      email: this._settings.contact.email,
+      address: this._settings.contact.address,
+      socials: this._settings.contact.socials
     };
   }
 
   updateSettings(settings: any) {
-    try {
-      localStorage.setItem('inst_settings', JSON.stringify(settings));
-      this.sync();
-    } catch (e) {
-      console.error("Failed to update settings locally.");
-    }
+    // In demo mode, we just update memory
+    this._settings.name = this.sanitize(settings.siteName);
+    this.sync();
   }
 
   // --- Enquiry Management (Hardened) ---
   async submitEnquiry(data: Omit<DbEnquiry, 'id' | 'timestamp' | 'status'>): Promise<boolean> {
-    // Simulate network delay for honesty
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Artificial delay to simulate processing
+    await new Promise(resolve => setTimeout(resolve, 600));
 
-    try {
-      const enquiries = this.getEnquiries();
-      const newEnquiry: DbEnquiry = {
-        name: this.sanitize(data.name),
-        phone: this.sanitize(data.phone),
-        email: this.sanitize(data.email),
-        course: this.sanitize(data.course),
-        message: this.sanitize(data.message),
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        status: 'NEW'
-      };
-      
-      enquiries.unshift(newEnquiry);
-      localStorage.setItem('inst_enquiries', JSON.stringify(enquiries));
-      this.sync();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    const newEnquiry: DbEnquiry = {
+      name: this.sanitize(data.name),
+      phone: this.sanitize(data.phone),
+      email: this.sanitize(data.email),
+      course: this.sanitize(data.course),
+      message: this.sanitize(data.message),
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      status: 'NEW'
+    };
+    
+    this._enquiries.unshift(newEnquiry);
+    this.sync();
+    return true;
   }
 
   getEnquiries(): DbEnquiry[] {
-    try {
-      const data = localStorage.getItem('inst_enquiries');
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  updateEnquiryStatus(id: number, status: 'NEW' | 'CONTACTED' | 'CLOSED') {
-    const enquiries = this.getEnquiries();
-    const index = enquiries.findIndex(e => e.id === id);
-    if (index !== -1) {
-      enquiries[index].status = status;
-      localStorage.setItem('inst_enquiries', JSON.stringify(enquiries));
-      this.sync();
-    }
+    return [...this._enquiries];
   }
 
   deleteEnquiry(id: number) {
-    const enquiries = this.getEnquiries();
-    const filtered = enquiries.filter(e => e.id !== id);
-    localStorage.setItem('inst_enquiries', JSON.stringify(filtered));
+    this._enquiries = this._enquiries.filter(e => e.id !== id);
     this.sync();
   }
 
   // --- Program Inventory ---
   getCourses(): DbCourse[] {
-    try {
-      const data = localStorage.getItem('inst_courses');
-      return data ? JSON.parse(data) : COURSES.map(c => ({
-        id: c.id,
-        name: c.title,
-        description: c.description,
-        duration: c.duration,
-        isPublished: true
-      }));
-    } catch (e) {
-      return [];
-    }
+    return [...this._courses];
   }
 
   // --- Broadcasts (Notices) ---
   getNotices(): DbNotice[] {
-    try {
-      const data = localStorage.getItem('inst_notices');
-      return data ? JSON.parse(data) : NOTICES.map((n, i) => ({ ...n, id: i, isActive: true }));
-    } catch (e) {
-      return [];
-    }
+    return NOTICES.map((n, i) => ({ ...n, id: i, isActive: true }));
   }
 
   getUsers(): AdminUser[] {
+    // Demo credentials
     return [
       { id: '1', username: 'admin', passwordHash: 'admin', role: 'SUPER_ADMIN' },
       { id: '2', username: 'editor', passwordHash: 'editor', role: 'MANAGER' }
     ];
   }
 
-  async authenticate(username: string, pass: string): Promise<boolean> {
-    const users = this.getUsers();
-    return users.some(u => u.username === username && u.passwordHash === pass);
-  }
-
   getPage(pageId: string): DbPage | undefined {
     const pages: Record<string, DbPage> = {
-      'home': { id: 'home', seo: { title: 'Home | SM Skills', description: 'Welcome to SM Skills Institute' } },
-      'about': { id: 'about', seo: { title: 'About Us | SM Skills', description: 'Learn about our history and mission' } },
-      'courses': { id: 'courses', seo: { title: 'Courses | SM Skills', description: 'Explore our wide range of professional courses' } },
-      'admissions': { id: 'admissions', seo: { title: 'Admissions | SM Skills', description: 'Join our institute today' } },
-      'placement': { id: 'placement', seo: { title: 'Placements | SM Skills', description: 'Our career support and corporate network' } },
-      'gallery': { id: 'gallery', seo: { title: 'Gallery | SM Skills', description: 'Life and events at SM Skills' } },
-      'contact': { id: 'contact', seo: { title: 'Contact Us | SM Skills', description: 'Get in touch with our admissions team' } },
+      'home': { id: 'home', seo: { title: 'Home | SM Skills', description: 'SM Skills Institute' } },
+      'about': { id: 'about', seo: { title: 'About | SM Skills', description: 'About SM Skills' } },
+      'courses': { id: 'courses', seo: { title: 'Courses | SM Skills', description: 'Our Courses' } },
+      'admissions': { id: 'admissions', seo: { title: 'Admissions | SM Skills', description: 'Join Us' } },
+      'placement': { id: 'placement', seo: { title: 'Placements | SM Skills', description: 'Careers' } },
+      'gallery': { id: 'gallery', seo: { title: 'Gallery | SM Skills', description: 'Campus Life' } },
+      'contact': { id: 'contact', seo: { title: 'Contact | SM Skills', description: 'Contact Us' } },
     };
     return pages[pageId];
   }

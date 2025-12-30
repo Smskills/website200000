@@ -1,18 +1,10 @@
-<<<<<<< HEAD
 const express = require('express');
 const router = express.Router();
-
-router.get('/', (req, res) => {
-  res.json({ status: 'ok' });
-=======
-
-const express = require('express');
-const router = express.Router();
-const pool = require('../config/db');
+const pool = require('../db'); // IMPORTANT: matches finalized db.js
 
 router.get('/', async (req, res) => {
   let dbStatus = 'ok';
-  
+
   try {
     await pool.query('SELECT 1');
   } catch (err) {
@@ -24,12 +16,11 @@ router.get('/', async (req, res) => {
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     services: {
-      database: dbStatus,
-      api: 'active'
+      api: 'active',
+      database: dbStatus
     },
     version: '1.0.0-foundation'
   });
->>>>>>> 96d0b75bfd2d9e6c79feae7589d7f70b5ef7ea3e
 });
 
 module.exports = router;
